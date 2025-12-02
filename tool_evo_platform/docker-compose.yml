@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: toolevo
+      POSTGRES_PASSWORD: toolevo
+      POSTGRES_DB: toolevo
+    ports:
+      - "5433:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  tool-registry:
+    build: ./services/tool-registry
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg2://toolevo:toolevo@db:5432/toolevo
+    ports:
+      - "9001:8000"
+
+  variability-engine:
+    build: ./services/variability-engine
+    depends_on:
+      - tool-registry
+    environment:
+      REGISTRY_BASE_URL: http://tool-registry:8000
+    ports:
+      - "9002:8000"
+
+  tool-gateway:
+    build: ./services/tool-gateway
+    depends_on:
+      - tool-registry
+    environment:
+      REGISTRY_BASE_URL: http://tool-registry:8000
+    ports:
+      - "9003:8000"
+
+  orchestrator:
+    build: ./services/orchestrator
+    depends_on:
+      - tool-gateway
+    environment:
+      GATEWAY_BASE_URL: http://tool-gateway:8000
+      REGISTRY_BASE_URL: http://tool-registry:8000
+      # Set this in your environment or override in compose if you want /nl endpoints:
+      # OPENAI_API_KEY: your-key-here
+    ports:
+      - "9004:8000"
+
+  weather-mock:
+    build: ./services/weather-mock
+    ports:
+      - "9005:8000"
+
+volumes:
+  db_data:

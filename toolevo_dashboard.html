@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToolEVO Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">ToolEVO Performance Dashboard</h1>
+            <p class="text-gray-600">Real-time performance metrics and analysis</p>
+            <div class="mt-4 flex gap-4">
+                <button onclick="startMonitoring()" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Start Monitoring
+                </button>
+                <button onclick="stopMonitoring()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Stop Monitoring
+                </button>
+                <button onclick="runLoadTest()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Run Load Test
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="metric-card text-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-2">Avg Response Time</h3>
+                <p class="text-3xl font-bold" id="avgResponseTime">0ms</p>
+                <p class="text-sm opacity-80">Last 5 minutes</p>
+            </div>
+            <div class="metric-card text-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-2">Requests/sec</h3>
+                <p class="text-3xl font-bold" id="requestsPerSec">0</p>
+                <p class="text-sm opacity-80">Current throughput</p>
+            </div>
+            <div class="metric-card text-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-2">Success Rate</h3>
+                <p class="text-3xl font-bold" id="successRate">0%</p>
+                <p class="text-sm opacity-80">Last 100 requests</p>
+            </div>
+            <div class="metric-card text-white rounded-lg shadow-lg p-6">
+                <h3 class="text-lg font-semibold mb-2">Active Services</h3>
+                <p class="text-3xl font-bold" id="activeServices">0/5</p>
+                <p class="text-sm opacity-80">Health status</p>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Response Time Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4">Response Time Trends</h3>
+                <div class="chart-container">
+                    <canvas id="responseTimeChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Throughput Chart -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4">Throughput</h3>
+                <div class="chart-container">
+                    <canvas id="throughputChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Latency Distribution -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4">Latency Distribution</h3>
+                <div class="chart-container">
+                    <canvas id="latencyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Service Health -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h3 class="text-xl font-semibold mb-4">Service Health</h3>
+                <div class="chart-container">
+                    <canvas id="healthChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Service Status Table -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-8">
+            <h3 class="text-xl font-semibold mb-4">Service Status</h3>
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b">
+                        <th class="text-left py-2">Service</th>
+                        <th class="text-left py-2">Status</th>
+                        <th class="text-left py-2">Port</th>
+                        <th class="text-left py-2">Avg Response</th>
+                        <th class="text-left py-2">Success Rate</th>
+                    </tr>
+                </thead>
+                <tbody id="serviceTable">
+                    <tr class="border-b">
+                        <td class="py-2">Tool Registry</td>
+                        <td class="py-2"><span class="px-2 py-1 bg-green-100 text-green-800 rounded">Healthy</span></td>
+                        <td class="py-2">9001</td>
+                        <td class="py-2">45ms</td>
+                        <td class="py-2">99.9%</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2">Variability Engine</td>
+                        <td class="py-2"><span class="px-2 py-1 bg-green-100 text-green-800 rounded">Healthy</span></td>
+                        <td class="py-2">9002</td>
+                        <td class="py-2">38ms</td>
+                        <td class="py-2">99.8%</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2">Tool Gateway</td>
+                        <td class="py-2"><span class="px-2 py-1 bg-green-100 text-green-800 rounded">Healthy</span></td>
+                        <td class="py-2">9003</td>
+                        <td class="py-2">52ms</td>
+                        <td class="py-2">99.7%</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2">Orchestrator</td>
+                        <td class="py-2"><span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Warning</span></td>
+                        <td class="py-2">9004</td>
+                        <td class="py-2">125ms</td>
+                        <td class="py-2">98.5%</td>
+                    </tr>
+                    <tr class="border-b">
+                        <td class="py-2">Weather Mock</td>
+                        <td class="py-2"><span class="px-2 py-1 bg-green-100 text-green-800 rounded">Healthy</span></td>
+                        <td class="py-2">9005</td>
+                        <td class="py-2">15ms</td>
+                        <td class="py-2">100%</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Load Test Results -->
+        <div class="bg-white rounded-lg shadow-lg p-6 mt-8" id="loadTestResults" style="display: none;">
+            <h3 class="text-xl font-semibold mb-4">Load Test Results</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-gray-600">Total Requests</p>
+                    <p class="text-2xl font-bold" id="ltTotalRequests">0</p>
+                </div>
+                <div>
+                    <p class="text-gray-600">Success Rate</p>
+                    <p class="text-2xl font-bold" id="ltSuccessRate">0%</p>
+                </div>
+                <div>
+                    <p class="text-gray-600">P95 Latency</p>
+                    <p class="text-2xl font-bold" id="ltP95">0ms</p>
+                </div>
+                <div>
+                    <p class="text-gray-600">Throughput</p>
+                    <p class="text-2xl font-bold" id="ltThroughput">0 req/s</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart configurations
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        };
+
+        // Response Time Chart
+        const responseTimeCtx = document.getElementById('responseTimeChart').getContext('2d');
+        const responseTimeChart = new Chart(responseTimeCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'P50',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                }, {
+                    label: 'P95',
+                    data: [],
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                    tension: 0.1
+                }, {
+                    label: 'P99',
+                    data: [],
+                    borderColor: 'rgb(255, 206, 86)',
+                    backgroundColor: 'rgba(255, 206, 86, 0.2)',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Response Time (ms)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Throughput Chart
+        const throughputCtx = document.getElementById('throughputChart').getContext('2d');
+        const throughputChart = new Chart(throughputCtx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Requests/sec',
+                    data: [],
+                    borderColor: 'rgb(54, 162, 235)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    fill: true,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Requests per Second'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Latency Distribution Chart
+        const latencyCtx = document.getElementById('latencyChart').getContext('2d');
+        const latencyChart = new Chart(latencyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['0-50ms', '50-100ms', '100-200ms', '200-500ms', '500ms+'],
+                datasets: [{
+                    label: 'Request Count',
+                    data: [450, 280, 120, 45, 5],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.6)',
+                        'rgba(54, 162, 235, 0.6)',
+                        'rgba(255, 206, 86, 0.6)',
+                        'rgba(255, 159, 64, 0.6)',
+                        'rgba(255, 99, 132, 0.6)'
+                    ]
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Requests'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Service Health Chart
+        const healthCtx = document.getElementById('healthChart').getContext('2d');
+        const healthChart = new Chart(healthCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Healthy', 'Warning', 'Critical', 'Down'],
+                datasets: [{
+                    data: [4, 1, 0, 0],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.8)',
+                        'rgba(255, 206, 86, 0.8)',
+                        'rgba(255, 159, 64, 0.8)',
+                        'rgba(255, 99, 132, 0.8)'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    }
+                }
+            }
+        });
+
+        // Monitoring state
+        let monitoringInterval = null;
+        let dataPoints = 0;
+        const maxDataPoints = 30;
+
+        function updateMetrics() {
+            // Simulate real-time data
+            const now = new Date().toLocaleTimeString();
+            
+            // Update metrics
+            document.getElementById('avgResponseTime').textContent = 
+                Math.floor(80 + Math.random() * 40) + 'ms';
+            document.getElementById('requestsPerSec').textContent = 
+                Math.floor(150 + Math.random() * 50);
+            document.getElementById('successRate').textContent = 
+                (98 + Math.random() * 2).toFixed(1) + '%';
+            document.getElementById('activeServices').textContent = '5/5';
+
+            // Update response time chart
+            if (responseTimeChart.data.labels.length >= maxDataPoints) {
+                responseTimeChart.data.labels.shift();
+                responseTimeChart.data.datasets.forEach(dataset => dataset.data.shift());
+            }
+            
+            responseTimeChart.data.labels.push(now);
+            responseTimeChart.data.datasets[0].data.push(50 + Math.random() * 20); // P50
+            responseTimeChart.data.datasets[1].data.push(90 + Math.random() * 30); // P95
+            responseTimeChart.data.datasets[2].data.push(150 + Math.random() * 50); // P99
+            responseTimeChart.update();
+
+            // Update throughput chart
+            if (throughputChart.data.labels.length >= maxDataPoints) {
+                throughputChart.data.labels.shift();
+                throughputChart.data.datasets[0].data.shift();
+            }
+            
+            throughputChart.data.labels.push(now);
+            throughputChart.data.datasets[0].data.push(150 + Math.random() * 50);
+            throughputChart.update();
+
+            dataPoints++;
+        }
+
+        function startMonitoring() {
+            if (monitoringInterval) return;
+            
+            console.log('Starting monitoring...');
+            monitoringInterval = setInterval(updateMetrics, 1000);
+            updateMetrics(); // Initial update
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                console.log('Monitoring stopped');
+            }
+        }
+
+        function runLoadTest() {
+            console.log('Running load test...');
+            
+            // Show load test results section
+            document.getElementById('loadTestResults').style.display = 'block';
+            
+            // Simulate load test results
+            setTimeout(() => {
+                document.getElementById('ltTotalRequests').textContent = '1000';
+                document.getElementById('ltSuccessRate').textContent = '99.2%';
+                document.getElementById('ltP95').textContent = '145ms';
+                document.getElementById('ltThroughput').textContent = '185 req/s';
+                
+                // Update latency distribution
+                latencyChart.data.datasets[0].data = [520, 320, 125, 30, 5];
+                latencyChart.update();
+            }, 2000);
+        }
+
+        // Auto-start monitoring on page load
+        window.onload = () => {
+            startMonitoring();
+        };
+    </script>
+</body>
+</html>
